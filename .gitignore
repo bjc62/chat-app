@@ -1,2 +1,4 @@
-node_modules/*
-chat-app/*
+.idea/
+.vscode/
+node_modules/
+build/
