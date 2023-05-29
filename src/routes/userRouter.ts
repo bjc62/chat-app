@@ -1,22 +1,35 @@
-import {Router} from 'express';
-import {User} from '../entity/User';
-import {AppDataSource} from '../connection/dataSource';
+import { Router } from "express";
+import { User } from "../entity/User";
+import { AppDataSource } from "../connection/dataSource";
 
 const router = Router();
 
-router.get('/:userEmail', async (req, res, next) => {
-    console.log(`req.params: ${req.params.userEmail}`);
-    try {
-        const userRepository = AppDataSource.getRepository(User);
-        const user = await userRepository.findOneBy({email: req.params.userEmail});
-        if(user) {
-            res.send(`user with email found: ${user?.email}`);
-        } else {
-            throw new Error(`User with email not found. ${req.params.userEmail}`);
-        }
-    } catch (error) {
-        res.send(`error: ${error}`);
+router.get("/", async (req, res, next) => {
+  console.log(`req.query: ${JSON.stringify(req.query)}`);
+
+  const email = req.query.email as string;
+  if (!email) {
+    console.error("User email is required");
+    res.status(400).json({ error: "User email is required" });
+    return;
+  }
+
+  try {
+    const userRepository = AppDataSource.getRepository(User);
+    const user = await userRepository.findOneBy({ email: email });
+    if (user) {
+      res.send(user);
+      return;
+    } else {
+      console.error(`User email not found: ${email}`);
+      res.status(400).json({ error: `User email not found: ${email}` });
+      return;
     }
+  } catch (error) {
+    console.error(`Unknown error: ${error}`);
+    res.status(500).json({ error: `Unknown error: ${error}` });
+    return;
+  }
 });
 
 export default router;

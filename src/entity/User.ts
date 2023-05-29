@@ -1,7 +1,11 @@
-import {Entity, PrimaryColumn} from 'typeorm';
+import { Column, Entity, JoinTable, ManyToMany, PrimaryColumn } from "typeorm";
 
 @Entity()
 export class User {
-    @PrimaryColumn()
-    email!: string
+  @PrimaryColumn()
+  email!: string;
+
+  @ManyToMany(() => User)
+  @JoinTable()
+  chatHistory?: User[];
 }

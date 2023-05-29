@@ -1,17 +1,26 @@
-import express from 'express';
+import express from "express";
+import cors from "cors";
 
-import signUpRouter from './routes/signUpRouter';
-import loginRouter from './routes/userRouter';
-import { AppDataSource } from "./connection/dataSource"
+import signUpRouter from "./routes/signUpRouter";
+import loginRouter from "./routes/userRouter";
+import { AppDataSource } from "./connection/dataSource";
 
 (async function () {
-    await AppDataSource.initialize();
+  await AppDataSource.initialize();
 
-    const app = express();
-    app.use('/signUp', signUpRouter);
-    app.use('/user', loginRouter);
+  const app = express();
 
-    app.listen(3000, () => {
-        console.log("server is running");
-    });
+  app.use(express.json());
+  app.use(
+    cors({
+      origin: "http://localhost:3000",
+    })
+  );
+
+  app.use("/signUp", signUpRouter);
+  app.use("/user", loginRouter);
+
+  app.listen(3001, () => {
+    console.log("server is running");
+  });
 })();
