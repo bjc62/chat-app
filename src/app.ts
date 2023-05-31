@@ -6,6 +6,7 @@ import loginRouter from "./routes/userRouter";
 import { AppDataSource } from "./connection/dataSource";
 import { Server, Socket } from "socket.io";
 import { createServer } from "http";
+import { saveMessage } from "./model/message";
 
 const userSocketMap = new Map<string, string>();
 
@@ -22,23 +23,38 @@ const userSocketMap = new Map<string, string>();
   webSocketServer.on("connect", (socket: Socket) => {
     console.log("a user connected");
 
-    socket.on("register", ({ userEmail }) => {
-      console.log(`userEmail: ${userEmail} connected`);
-      userSocketMap.set(userEmail, socket.id);
+    socket.on("register", ({ email }) => {
+      console.log(`userEmail: ${email} registered`);
+      userSocketMap.set(email, socket.id);
     });
 
-    socket.on("private_message", ({ toUserEmail, content }) => {
-      const toSocketId = userSocketMap.get(toUserEmail);
-      if (toSocketId) {
-        socket.to(toSocketId).emit(content);
-      } else {
-        console.error(`user email not exist: ${toUserEmail}`);
+    socket.on(
+      "private_message",
+      async ({ fromUserEmail, toUserEmail, timestamp, content }) => {
+        // send message to receipient socket
+        const toSocketId = userSocketMap.get(toUserEmail);
+        if (toSocketId) {
+          socket
+            .to(toSocketId)
+            .emit("private_message", {
+              fromUserEmail,
+              toUserEmail,
+              timestamp,
+              content,
+            });
+        } else {
+          console.error(`user email not exist: ${toUserEmail}`);
+        }
+
+        // save message to db
+        try {
+          await saveMessage({ fromUserEmail, toUserEmail, timestamp, content });
+          console.log("completed save message");
+        } catch (exception) {
+          console.error(`save message error: ${exception}`);
+        }
       }
-    });
-
-    socket.on("client_message", (obj) => {
-      console.log(JSON.stringify(obj));
-    });
+    );
 
     socket.on("disconnect", () => {
       console.log("user disconnected");
