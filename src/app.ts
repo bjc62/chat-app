@@ -7,6 +7,7 @@ import { AppDataSource } from "./connection/dataSource";
 import { Server, Socket } from "socket.io";
 import { createServer } from "http";
 import { saveMessage } from "./model/message";
+import chatHistoryRouter from "./routes/chatHistoryRouter";
 
 const userSocketMap = new Map<string, string>();
 
@@ -34,14 +35,12 @@ const userSocketMap = new Map<string, string>();
         // send message to receipient socket
         const toSocketId = userSocketMap.get(toUserEmail);
         if (toSocketId) {
-          socket
-            .to(toSocketId)
-            .emit("private_message", {
-              fromUserEmail,
-              toUserEmail,
-              timestamp,
-              content,
-            });
+          socket.to(toSocketId).emit("private_message", {
+            fromUserEmail,
+            toUserEmail,
+            timestamp,
+            content,
+          });
         } else {
           console.error(`user email not exist: ${toUserEmail}`);
         }
@@ -83,6 +82,7 @@ const userSocketMap = new Map<string, string>();
 
   apiApp.use("/signUp", signUpRouter);
   apiApp.use("/user", loginRouter);
+  apiApp.use("/chatHistory", chatHistoryRouter);
 
   apiApp.listen(3001, () => {
     console.log("API server is running on 3001 port");
