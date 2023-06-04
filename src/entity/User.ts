@@ -8,4 +8,8 @@ export class User {
   @ManyToMany(() => User)
   @JoinTable()
   chatHistory?: User[];
+
+  constructor(email: string) {
+    this.email = email;
+  }
 }

@@ -8,6 +8,7 @@ import { Server, Socket } from "socket.io";
 import { createServer } from "http";
 import { saveMessage } from "./model/message";
 import chatHistoryRouter from "./routes/chatHistoryRouter";
+import { User } from "./entity/User";
 
 const userSocketMap = new Map<string, string>();
 
@@ -22,8 +23,6 @@ const userSocketMap = new Map<string, string>();
   });
 
   webSocketServer.on("connect", (socket: Socket) => {
-    console.log("a user connected");
-
     socket.on("register", ({ email }) => {
       console.log(`userEmail: ${email} registered`);
       userSocketMap.set(email, socket.id);
@@ -42,15 +41,33 @@ const userSocketMap = new Map<string, string>();
             content,
           });
         } else {
-          console.error(`user email not exist: ${toUserEmail}`);
+          console.error(`user email not online: ${toUserEmail}. Message will still be sotred in the DB.
+          Will be sending notification in future updates.`);
         }
 
         // save message to db
         try {
           await saveMessage({ fromUserEmail, toUserEmail, timestamp, content });
-          console.log("completed save message");
         } catch (exception) {
-          console.error(`save message error: ${exception}`);
+          console.error(
+            `during receiving private message, saving message error: ${exception}`
+          );
+        }
+
+        // save chat history to db
+        try {
+          const user = new User(fromUserEmail);
+          user.chatHistory = [new User(toUserEmail)];
+          console.log(
+            `during receiving private message, saving user: ${JSON.stringify(
+              user
+            )}`
+          );
+          const savedUser = await AppDataSource.manager.save(user);
+        } catch (exception) {
+          console.error(
+            `during receiving private message, saving user error: ${exception}`
+          );
         }
       }
     );
