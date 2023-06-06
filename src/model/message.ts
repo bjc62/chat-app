@@ -13,7 +13,7 @@ export const saveMessage = async (message: Message) => {
   await db.put(key, message.content);
 };
 
-export const getChatHistory = async (
+export const getHistoricalMessages = async (
   fromUserEmail: string,
   toUserEmail: string,
   timestamp: number

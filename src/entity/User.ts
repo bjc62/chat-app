@@ -1,13 +1,24 @@
-import { Column, Entity, JoinTable, ManyToMany, PrimaryColumn } from "typeorm";
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  OneToMany,
+  PrimaryColumn,
+} from "typeorm";
+import ChatHistory from "./ChatHistory";
 
 @Entity()
 export class User {
   @PrimaryColumn()
   email!: string;
 
-  @ManyToMany(() => User)
-  @JoinTable()
-  chatHistory?: User[];
+  // @OneToMany(() => ChatHistory, (chatHistory) => chatHistory.user, {
+  //   cascade: true,
+  // })
+  // @JoinColumn()
+  // chatHistory?: ChatHistory[];
 
   constructor(email: string) {
     this.email = email;

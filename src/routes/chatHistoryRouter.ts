@@ -1,30 +1,18 @@
-// an Express router to take fromUserEmail, toUserEmail and timestamp as query parameters
-// and return the chat history between the two users.
-import { Router, Request, Response } from "express";
-import { Message, getChatHistory } from "../model/message";
+import { Router } from "express";
+import ChatHistory from "../entity/ChatHistory";
+import { AppDataSource } from "../connection/dataSource";
 
 const chatHistoryRouter = Router();
+const chatHistoryRepository = AppDataSource.getRepository(ChatHistory);
 
-chatHistoryRouter.get("/", async (req: Request, res: Response) => {
-  const fromUserEmail = req.query.fromUserEmail as string;
-  const toUserEmail = req.query.toUserEmail as string;
-  const timestamp = Number(req.query.timestamp);
-  console.log(
-    `getting chat history for: ${fromUserEmail}:${toUserEmail}:${timestamp}`
-  );
-
-  try {
-    const messages = await getChatHistory(
-      fromUserEmail,
-      toUserEmail,
-      timestamp
-    );
-    console.log(`messages fetched: ${JSON.stringify(messages)}`);
-    res.send(messages);
-  } catch (exception) {
-    console.error(`get chat history error: ${exception}`);
-    res.status(500).json({ error: `get chat history error: ${exception}` });
-  }
+chatHistoryRouter.get("/", async (req, res) => {
+  const userEmail = req.query.userEmail as string;
+  const chatHistories = await chatHistoryRepository
+    .createQueryBuilder("chatHistory")
+    .where("chatHistory.oneReceipient = :email", { email: userEmail })
+    .getMany();
+  console.log(`queried chatHistories: ${JSON.stringify(chatHistories)}`);
+  res.send(chatHistories);
   return;
 });
 

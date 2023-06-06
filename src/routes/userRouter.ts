@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { User } from "../entity/User";
 import { AppDataSource } from "../connection/dataSource";
+import ChatHistory from "../entity/ChatHistory";
 
 const router = Router();
 
@@ -16,6 +17,7 @@ router.get("/", async (req, res, next) => {
 
   try {
     const userRepository = AppDataSource.getRepository(User);
+    const chatHistoryRepository = AppDataSource.getRepository(ChatHistory);
     const user = await userRepository.findOneBy({ email: email });
     if (user) {
       res.send(user);

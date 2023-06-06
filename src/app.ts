@@ -7,12 +7,17 @@ import { AppDataSource } from "./connection/dataSource";
 import { Server, Socket } from "socket.io";
 import { createServer } from "http";
 import { saveMessage } from "./model/message";
-import chatHistoryRouter from "./routes/chatHistoryRouter";
+import historicalMessageRouter from "./routes/historicalMessageRouter";
 import { User } from "./entity/User";
+import ChatHistory from "./entity/ChatHistory";
+import chatHistoryRouter from "./routes/chatHistoryRouter";
 
 const userSocketMap = new Map<string, string>();
 
 (async function () {
+  const userRepository = AppDataSource.getRepository(User);
+  const chatHistoryRepository = AppDataSource.getRepository(ChatHistory);
+
   const webSocketApp = express();
   const httpServer = createServer(webSocketApp);
   const webSocketServer = new Server(httpServer, {
@@ -56,14 +61,10 @@ const userSocketMap = new Map<string, string>();
 
         // save chat history to db
         try {
-          const user = new User(fromUserEmail);
-          user.chatHistory = [new User(toUserEmail)];
-          console.log(
-            `during receiving private message, saving user: ${JSON.stringify(
-              user
-            )}`
-          );
-          const savedUser = await AppDataSource.manager.save(user);
+          const chatHistory1 = new ChatHistory(fromUserEmail, toUserEmail);
+          const chatHistory2 = new ChatHistory(toUserEmail, fromUserEmail);
+          await chatHistoryRepository.save(chatHistory1);
+          await chatHistoryRepository.save(chatHistory2);
         } catch (exception) {
           console.error(
             `during receiving private message, saving user error: ${exception}`
@@ -99,6 +100,7 @@ const userSocketMap = new Map<string, string>();
 
   apiApp.use("/signUp", signUpRouter);
   apiApp.use("/user", loginRouter);
+  apiApp.use("/historicalMessage", historicalMessageRouter);
   apiApp.use("/chatHistory", chatHistoryRouter);
 
   apiApp.listen(3001, () => {
