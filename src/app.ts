@@ -6,11 +6,12 @@ import loginRouter from "./routes/userRouter";
 import { AppDataSource } from "./connection/dataSource";
 import { Server, Socket } from "socket.io";
 import { createServer } from "http";
-import { saveMessage } from "./model/message";
 import historicalMessageRouter from "./routes/historicalMessageRouter";
 import { User } from "./entity/User";
 import ChatHistory from "./entity/ChatHistory";
 import chatHistoryRouter from "./routes/chatHistoryRouter";
+import registerEvent from "./eventListeners/register";
+import privateMessageEvent from "./eventListeners/private_message";
 
 const userSocketMap = new Map<string, string>();
 
@@ -28,50 +29,8 @@ const userSocketMap = new Map<string, string>();
   });
 
   webSocketServer.on("connect", (socket: Socket) => {
-    socket.on("register", ({ email }) => {
-      console.log(`userEmail: ${email} registered`);
-      userSocketMap.set(email, socket.id);
-    });
-
-    socket.on(
-      "private_message",
-      async ({ fromUserEmail, toUserEmail, timestamp, content }) => {
-        // send message to receipient socket
-        const toSocketId = userSocketMap.get(toUserEmail);
-        if (toSocketId) {
-          socket.to(toSocketId).emit("private_message", {
-            fromUserEmail,
-            toUserEmail,
-            timestamp,
-            content,
-          });
-        } else {
-          console.error(`user email not online: ${toUserEmail}. Message will still be sotred in the DB.
-          Will be sending notification in future updates.`);
-        }
-
-        // save message to db
-        try {
-          await saveMessage({ fromUserEmail, toUserEmail, timestamp, content });
-        } catch (exception) {
-          console.error(
-            `during receiving private message, saving message error: ${exception}`
-          );
-        }
-
-        // save chat history to db
-        try {
-          const chatHistory1 = new ChatHistory(fromUserEmail, toUserEmail);
-          const chatHistory2 = new ChatHistory(toUserEmail, fromUserEmail);
-          await chatHistoryRepository.save(chatHistory1);
-          await chatHistoryRepository.save(chatHistory2);
-        } catch (exception) {
-          console.error(
-            `during receiving private message, saving user error: ${exception}`
-          );
-        }
-      }
-    );
+    registerEvent(socket);
+    privateMessageEvent(socket);
 
     socket.on("disconnect", () => {
       console.log("user disconnected");
@@ -102,6 +61,21 @@ const userSocketMap = new Map<string, string>();
   apiApp.use("/user", loginRouter);
   apiApp.use("/historicalMessage", historicalMessageRouter);
   apiApp.use("/chatHistory", chatHistoryRouter);
+
+  apiApp.get("/test1", (req, res) => {
+    setTimeout(() => {
+      res.send("test1 finished");
+    }, 10000);
+  });
+  apiApp.get("/test2", async (req, res) => {
+    const promise = new Promise<string>((resolve) => {
+      setTimeout(() => {
+        resolve("promise resolved");
+      }, 10000);
+    });
+    await promise;
+    res.send("test2 finished");
+  });
 
   apiApp.listen(3001, () => {
     console.log("API server is running on 3001 port");
