@@ -5,8 +5,19 @@
    "main": "index.js",
    "scripts": {
       "test": "jest",
-      "start": "nodemon src/app.ts",
-      "purge-db": "rm -rf ./database.sqlite && rm -rf ./mydb"
+      "build": "tsc -p .",
+      "start": "npm run build && node ./dist/app.js",
+      "dev": "nodemon src/app.ts",
+      "purge-db": "rm -rf ./database.sqlite && rm -rf ./mydb",
+      "dockerbuild": "docker build -t chat-app-backend .",
+      "run": "docker run -p 3001:3001 chat-app-backend",
+      "stop": "docker stop chat-app-backend",
+      "rebuild": "npm run build && npm run run",
+      "mount": "docker run -p 3001:3001 -v $(pwd):/chat-app chat-app-backend",
+      "herokudockerbuild": "docker buildx build --platform linux/amd64 -t chat-app-backend-linux .",
+      "herokudockertag": "docker tag chat-app-backend-linux registry.heroku.com/cryptic-falls-03424/web",
+      "herokudockerpush": "docker push registry.heroku.com/cryptic-falls-03424/web",
+      "herokustart": "heroku container:release web -a cryptic-falls-03424 && heroku logs --tail"
    },
    "author": "",
    "license": "ISC",

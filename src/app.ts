@@ -15,12 +15,14 @@ import privateMessageEvent from "./eventListeners/private_message";
 
 const userSocketMap = new Map<string, string>();
 
+const port = process.env.PORT || 3001;
+
 (async function () {
   const userRepository = AppDataSource.getRepository(User);
   const chatHistoryRepository = AppDataSource.getRepository(ChatHistory);
 
-  const webSocketApp = express();
-  const httpServer = createServer(webSocketApp);
+  const expressApp = express();
+  const httpServer = createServer(expressApp);
   const webSocketServer = new Server(httpServer, {
     cors: {
       origin: "http://localhost:3000",
@@ -42,32 +44,30 @@ const userSocketMap = new Map<string, string>();
     });
   });
 
-  httpServer.listen(3002, () => {
-    console.log("WebSocket server listening on 3002 port");
+  httpServer.listen(port, () => {
+    console.log(`WebSocket server listening on ${port} port`);
   });
 
   await AppDataSource.initialize();
 
-  const apiApp = express();
-
-  apiApp.use(express.json());
-  apiApp.use(
+  expressApp.use(express.json());
+  expressApp.use(
     cors({
       origin: "http://localhost:3000",
     })
   );
 
-  apiApp.use("/signUp", signUpRouter);
-  apiApp.use("/user", loginRouter);
-  apiApp.use("/historicalMessage", historicalMessageRouter);
-  apiApp.use("/chatHistory", chatHistoryRouter);
+  expressApp.use("/signUp", signUpRouter);
+  expressApp.use("/user", loginRouter);
+  expressApp.use("/historicalMessage", historicalMessageRouter);
+  expressApp.use("/chatHistory", chatHistoryRouter);
 
-  apiApp.get("/test1", (req, res) => {
+  expressApp.get("/test1", (req, res) => {
     setTimeout(() => {
       res.send("test1 finished");
     }, 10000);
   });
-  apiApp.get("/test2", async (req, res) => {
+  expressApp.get("/test2", async (req, res) => {
     const promise = new Promise<string>((resolve) => {
       setTimeout(() => {
         resolve("promise resolved");
@@ -77,7 +77,7 @@ const userSocketMap = new Map<string, string>();
     res.send("test2 finished");
   });
 
-  apiApp.listen(3001, () => {
-    console.log("API server is running on 3001 port");
-  });
+  // const apiServer = expressApp.listen(port, () => {
+  //   console.log(`API server is running on ${port} port`);
+  // });
 })();
