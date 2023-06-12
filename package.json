@@ -14,10 +14,8 @@
       "stop": "docker stop chat-app-backend",
       "rebuild": "npm run build && npm run run",
       "mount": "docker run -p 3001:3001 -v $(pwd):/chat-app chat-app-backend",
-      "herokudockerbuild": "docker buildx build --platform linux/amd64 -t chat-app-backend-linux .",
-      "herokudockertag": "docker tag chat-app-backend-linux registry.heroku.com/cryptic-falls-03424/web",
-      "herokudockerpush": "docker push registry.heroku.com/cryptic-falls-03424/web",
-      "herokustart": "heroku container:release web -a cryptic-falls-03424 && heroku logs --tail"
+      "gcloudbuild": "gcloud builds submit --tag gcr.io/chat-app-389502/chat-app-backend",
+      "gclouddeploy": "gcloud run deploy --image gcr.io/chat-app-389502/chat-app-backend --platform managed"
    },
    "author": "",
    "license": "ISC",

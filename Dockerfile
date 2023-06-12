@@ -1,4 +1,6 @@
-FROM node:alpine
+FROM alpine:latest
+
+RUN apk add --update nodejs npm
 
 WORKDIR /chat-app/
 

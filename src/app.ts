@@ -25,7 +25,7 @@ const port = process.env.PORT || 3001;
   const httpServer = createServer(expressApp);
   const webSocketServer = new Server(httpServer, {
     cors: {
-      origin: "http://localhost:3000",
+      origin: ["http://localhost:3000", "https://storage.googleapis.com"],
       methods: ["GET", "POST"],
     },
   });
@@ -53,7 +53,11 @@ const port = process.env.PORT || 3001;
   expressApp.use(express.json());
   expressApp.use(
     cors({
-      origin: "http://localhost:3000",
+      origin: [
+        "http://localhost:3000",
+        "http://localhost:9000",
+        "https://storage.googleapis.com",
+      ],
     })
   );
 
