@@ -19,11 +19,30 @@ export const getHistoricalMessages = async (
   timestamp: number
 ): Promise<Message[]> => {
   const messages: Message[] = [];
-  const stream = new EntryStream(db, {
+
+  // fetching message from "from to to"
+  const fromToToStream = new EntryStream(db, {
     gte: `${fromUserEmail}:${toUserEmail}:${timestamp}`,
   });
 
-  for await (const data of stream) {
+  for await (const data of fromToToStream) {
+    const [fromUserEmailDB, toUserEmailDB, timestampDB] = data.key.split(":");
+    const content = data.value as string;
+    const message: Message = {
+      fromUserEmail: fromUserEmailDB,
+      toUserEmail: toUserEmailDB,
+      timestamp: Number(timestampDB),
+      content,
+    };
+    messages.push(message);
+  }
+
+  // fetching message from "to to from"
+  const toToFromStream = new EntryStream(db, {
+    gte: `${toUserEmail}:${fromUserEmail}:${timestamp}`,
+  });
+
+  for await (const data of toToFromStream) {
     const [fromUserEmailDB, toUserEmailDB, timestampDB] = data.key.split(":");
     const content = data.value as string;
     const message: Message = {
